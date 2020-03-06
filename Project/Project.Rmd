@@ -9,31 +9,66 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
-
 ```{r}
-readr::read_csv("/Users/aleram15/Documents/GitHub/BIS15W2020_ARamirez/Project/Kaggledata.csv")
+library(tidyverse)
 ```
 
 
-
-
-
-
-
 ```{r}
-readr::read_csv("/Users/aleram15/Documents/GitHub/BIS15W2020_ARamirez/Project/sequences.csv")
+Kaggle <- readr::read_csv("/Users/aleram15/Documents/GitHub/BIS15W2020_Project_ARamirez/Project/Kaggledata.csv")
 ```
 
-
+```{r}
+nucseq <- readr::read_csv("/Users/aleram15/Documents/GitHub/BIS15W2020_Project_ARamirez/Project/sequences.csv")
+```
 
 ```{r}
 getwd()
 ```
 
 
+```{r}
+nucseq <-
+  nucseq%>%
+  mutate(Protein= tolower(Protein))
+nucseq
+```
+
+```{r}
+Protein_length <- nucseq%>%
+  select(Protein, Length)%>%
+  group_by(Protein)%>%
+  summarise(Longest_Proteins= max(Length), Count= table(names(Protein)))%>%
+  arrange(desc(Longest_Proteins))
+Protein_length
+```
+
+```{r}
+Protein_length <- nucseq%>%
+  select(Protein, Length)%>%
+  group_by(Protein)%>%
+  summarise(Longest_Proteins= max(Length))%>%
+  arrange(desc(Longest_Proteins))
+Protein_length
+```
 
 
+```{r}
+  unique(nucseq$Protein)
+```
+
+
+
+
+```{r}
+ggplot(data = nucseq, aes(x=Isolation_Source, fill= Isolation_Source))+
+  geom_bar()+
+  coord_flip()
+```
+
+```{r}
+
+```
 
 
 
