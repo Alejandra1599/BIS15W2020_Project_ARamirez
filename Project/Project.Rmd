@@ -8,9 +8,24 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+```{r}
+install.packages("shiny")
+
+```
+
+```{r}
+install.packages("shinydashboard")
+```
+```{r}
+install.packages("naniar")
+```
+
 
 ```{r}
 library(tidyverse)
+library(shiny)
+library(shinydashboard)
+library(naniar)
 ```
 
 
@@ -34,23 +49,20 @@ nucseq <-
 nucseq
 ```
 
-```{r}
-Protein_length <- nucseq%>%
-  select(Protein, Length)%>%
-  group_by(Protein)%>%
-  summarise(Longest_Proteins= max(Length), Count= table(names(Protein)))%>%
-  arrange(desc(Longest_Proteins))
-Protein_length
-```
+
 
 ```{r}
 Protein_length <- nucseq%>%
   select(Protein, Length)%>%
   group_by(Protein)%>%
   summarise(Longest_Proteins= max(Length))%>%
+  mutate(Count= nchar(Protein))%>%
   arrange(desc(Longest_Proteins))
 Protein_length
 ```
+
+
+
 
 
 ```{r}
@@ -61,16 +73,54 @@ Protein_length
 
 
 ```{r}
-ggplot(data = nucseq, aes(x=Isolation_Source, fill= Isolation_Source))+
+nucseq%>%
+ggplot(aes(x=Isolation_Source, fill= Isolation_Source))+
   geom_bar()+
-  coord_flip()
+  coord_flip()+
+   labs(title = "Isolation Source")+
+    theme(plot.title = element_text(size = 18, face = "bold", hjust = .5),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 12))
 ```
 
 ```{r}
+Kaggle
+```
 
+```{r}
+names(Kaggle)
 ```
 
 
+```{r}
+ui <- dashboardPage(
+  dashboardHeader(title = "Kaggle App"),
+  dashboardSidebar(),
+  dashboardBody(
+  selectInput("y", "Select Y Variable", choices = c("Deaths", "Suspected", "Confirmed"),
+              selected = "Confirmed"),
+  sliderInput("pointsize", "Select the Point Size", min = 1, max = 5, value = 2, step = 0.5),
+  plotOutput("plot", width = "500px", height = "400px"))
+)
+
+server <- function(input, output, session) { 
+  
+  # the code to make the plot of iris data grouped by species
+  output$plot <- renderPlot({
+    ggplot(Kaggle, aes_string(x = "Country", y = input$y)) + 
+      geom_bar(stat = "identity") +
+      coord_flip()+
+      theme_light(base_size = 18)
+  })
+  
+  # stop the app when we close it
+  session$onSessionEnded(stopApp)
+
+  }
+
+shinyApp(ui, server)
+
+```
 
 
 
