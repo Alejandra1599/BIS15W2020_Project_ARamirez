@@ -1,0 +1,302 @@
+---
+title: "Coronavirus: Exploratory Data Analysis and Informational Guide"
+author: "Savita Sastry Alejandra Ramirez"
+date: "Winter 2020"
+output: 
+  ioslides_presentation: 
+    keep_md: yes
+background image: ("data/coronavirus_title.jpg")
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+#install.packages("jpeg")
+#install.packages("htmltools")
+#install.packages("mime")
+# install.packages("tidyverse")
+# install.packages("naniar")
+# install.packages("skimr")
+# install.packages("visdat")
+# install.packages("devtools")
+# install.packages("rgeos")
+# install.packages("rgdal")
+# devtools::install_github("dkahle/ggmap")
+# install.packages("shiny")
+#install.packages("httpuv")
+# install.packages("DT")
+# install.packages("rpivotTable")
+# install.packages("plotly")
+# install.packages("openintro")
+# install.packages("highcharacter")
+# devtools::install_github("rstudio/httpuv")
+# devtools::install_github("yihui/mime")
+# devtools::install_github("rstudio/shiny")
+library(flexdashboard)
+library(knitr)
+library(shiny)
+library(shinydashboard)
+library(devtools)
+library(visdat)
+library(tidyverse)
+library(naniar)
+library(skimr)
+library(ggmap)
+library(rgeos)
+library(rgdal)
+library(DT)
+library(rpivotTable)
+library(ggplot2)
+library(plotly)
+library(openintro)
+library(plyr)
+library(htmltools)
+library(mime)
+library("jpeg")
+```
+
+
+## Protecting your Mental Health During the Coronavirus Outbreak
+
+- Fear from disease outbreaks can cause changes in sleeping and eating patterns, difficulty concentrating, and heightened anxiety.
+- Focus on what you can control 
+- Do what helps you feel a sense of safety 
+- Spend time outside, even if you're avoiding crowds 
+- Engage in mindfulness activities 
+- Reach out if you need more support
+<center>
+![picture of coronavirus](data/unicef_health.jpg)
+<center>
+
+#What is Coronavirus?
+
+- a zoonotic virus from the coronavirus family that is believed to have originated from bats
+- A novel coronavirus is one that has not been previously identified in humans
+- Combination of rapid spreading, virulence intensity puts those that are immune compromised or deficient at high risk
+
+
+#How Does Coronavirus Spread?
+-Person- person contact, coughing, sneezing, fomites
+-Although we have an idea on how it spreads, scientists still don't fully understand the virus and we are still learning about possible transmissions
+-There has also been some speculation that this new virus can spread even if a person isn't showing any symptoms, which is unusual for a virus
+
+
+## Prevention Tips
+-Wash hands frequently, don't touch your face, avoid crowds, and stay home if sick
+
+```{r out.width = "300px"}
+knitr::include_graphics("data/symptoms-cough.jpg")
+knitr::include_graphics("data/symptoms-fever.jpg")
+knitr::include_graphics("data/symptoms-shortness-breath.jpg")
+
+```
+
+## Flattening The Curve
+
+```{r, out.width = "800px"}
+knitr::include_graphics("data/flatteningthecurve.jpg")
+```
+
+
+
+
+
+```{r include=FALSE}
+
+CoV_confirmed <- readr::read_csv("data/time_series_19-covid-Confirmed.csv")
+
+CoV_confirmed <- CoV_confirmed %>%
+  mutate(total_confirmed = rowSums(.[5:54])) %>%
+  arrange(desc(`total_confirmed`))
+
+CoV_confirmed_condensed <- CoV_confirmed %>%
+  select(`Country/Region`, total_confirmed) %>%
+  group_by(`Country/Region`) %>%
+  summarise_all(funs(sum)) %>%
+  arrange(desc(`total_confirmed`))
+
+```
+
+```{r include=FALSE}
+CoV_death <- readr::read_csv("data/time_series_19-covid-Deaths.csv")
+
+CoV_death <- CoV_death %>%
+  mutate(total_death = rowSums(.[5:54])) %>%
+  arrange(desc(`total_death`))
+
+CoV_death_condensed <- CoV_death %>%
+  select(`Country/Region`, total_death) %>%
+  group_by(`Country/Region`) %>%
+  summarise_all(funs(sum)) %>%
+  arrange(desc(`total_death`))
+
+```
+
+```{r include=FALSE}
+CoV_recovered <- readr::read_csv("data/time_series_19-covid-Recovered.csv")
+
+CoV_recovered <- CoV_recovered %>%
+  mutate(total_recovered = rowSums(.[5:54])) %>%
+  arrange(desc(`total_recovered`))
+
+CoV_recovered_condensed <- CoV_recovered %>%
+  select(`Country/Region`, total_recovered) %>%
+  group_by(`Country/Region`) %>%
+  summarise_all(funs(sum)) %>%
+  arrange(desc(`total_recovered`))
+
+```
+
+## Visualizing Existing Cases
+```{r warning=FALSE}
+CoV_confirmed_condensed[2:10,] %>% 
+  ggplot(aes(x = `Country/Region`, y = total_confirmed, fill = `Country/Region`)) +
+  geom_bar(position = "dodge", color = "black", stat = "Identity") +
+  xlab("Country")  +
+  ylab("Confirmed Cases") +
+  labs(title = "Cases of Coronavirus Since February 22")
+```
+
+## Visualizing Death Caused by Coronavirus
+```{r}
+CoV_death_condensed[2:10,] %>% 
+  ggplot(aes(x = `Country/Region`, y = total_death, fill = `Country/Region`)) +
+  geom_bar(position = "dodge", color = "black", stat = "Identity") +
+  xlab("Country")  +
+  ylab("Cases That Resulted in Death") +
+  labs(title = "Mortality Due of Coronavirus Since February 22")
+  
+```
+ 
+## Visualizing Death Caused by Coronavirus
+```{r}
+CoV_recovered_condensed[2:10,] %>% 
+  ggplot(aes(x = `Country/Region`, y = total_recovered, fill = `Country/Region`)) +
+  geom_bar(position = "dodge", color = "black", stat = "Identity") +
+  xlab("Country")  +
+  ylab("Cases That Resulted in Recovery") +
+  labs(title = "Recovery From Coronavirus Since February 22")
+```
+
+## Confirmed Cases Through Time
+
+```{r include=FALSE}
+CoV_confirmed_time <- CoV_confirmed %>%
+  select(`Country/Region`, `1/22/20`:`3/11/20`) %>%
+  group_by(`Country/Region`) %>%
+  summarise_all(funs(sum)) %>%
+  filter(`Country/Region` == "Cruise Ship" | `Country/Region` == "France" | `Country/Region` == "Germany" | `Country/Region` == "Iran" | `Country/Region` == "Italy" | `Country/Region` == "Japan"| `Country/Region` == "Korea, South"| `Country/Region` == "Spain"| `Country/Region` == "US") 
+  # group_by(`Country/Region`) %>%
+  # summarise_all(funs(sum)) 
+
+CoV_confirmed_time %>%
+  pivot_longer(`1/22/20`:`3/11/20`, 
+               names_to = "Date",
+               values_to = "Count")
+
+```
+
+
+```{r warning=FALSE, message = FALSE}
+CoV_confirmed_time %>%
+  pivot_longer(`1/22/20`:`3/11/20`, 
+               names_to = "Date",
+               values_to = "Count") %>%
+  group_by(`Country/Region`) %>%
+  ggplot(aes(x = Date, y = Count, col = `Country/Region`)) +
+  geom_line() +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  xlab("Date")  +
+  ylab("Cases of Coronavirus") +
+  labs(title = "Confirmed Cases of Coronavirus Through Time")
+```
+
+
+## Cases Resulting in Death Through Time
+
+```{r include=FALSE}
+CoV_death_time <- CoV_death %>%
+  select(`Country/Region`, `1/22/20`:`3/11/20`) %>%
+  group_by(`Country/Region`) %>%
+  summarise_all(funs(sum)) %>%
+  filter(`Country/Region` == "Cruise Ship" | `Country/Region` == "France" | `Country/Region` == "Germany" | `Country/Region` == "Iran" | `Country/Region` == "Italy" | `Country/Region` == "Japan"| `Country/Region` == "Korea, South"| `Country/Region` == "Spain"| `Country/Region` == "US") 
+
+
+CoV_death_time %>%
+  pivot_longer(`1/22/20`:`3/11/20`, 
+               names_to = "Date",
+               values_to = "Count")
+
+```
+
+
+```{r warning=FALSE, message = FALSE}
+CoV_death_time %>%
+  pivot_longer(`1/22/20`:`3/11/20`, 
+               names_to = "Date",
+               values_to = "Count") %>%
+  group_by(`Country/Region`) %>%
+  ggplot(aes(x = Date, y = Count, col = `Country/Region`)) +
+  geom_line() +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  xlab("Date")  +
+  ylab("Death Due to Coronavirus") +
+  labs(title = "Cases Resulting in Death Through Time")
+```
+
+## Cases Resulting in Recovery Through Time
+
+```{r include=FALSE}
+CoV_recovered_time <- CoV_recovered %>%
+  select(`Country/Region`, `1/22/20`:`3/11/20`) %>%
+  group_by(`Country/Region`) %>%
+  summarise_all(funs(sum)) %>%
+  filter(`Country/Region` == "Cruise Ship" | `Country/Region` == "France" | `Country/Region` == "Germany" | `Country/Region` == "Iran" | `Country/Region` == "Italy" | `Country/Region` == "Japan"| `Country/Region` == "Korea, South"| `Country/Region` == "Spain"| `Country/Region` == "US") 
+  
+CoV_recovered_time %>%
+  pivot_longer(`1/22/20`:`3/11/20`, 
+               names_to = "Date",
+               values_to = "Count")
+
+```
+
+
+```{r warning=FALSE, message = FALSE}
+CoV_confirmed_time %>%
+  pivot_longer(`1/22/20`:`3/11/20`, 
+               names_to = "Date",
+               values_to = "Count") %>%
+  group_by(`Country/Region`) %>%
+  ggplot(aes(x = Date, y = Count, col = `Country/Region`)) +
+  geom_line() +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  xlab("Date")  +
+  ylab("Cases of Coronavirus") +
+  labs(title = "Cases Resulting in Recovery Through Time")
+```
+
+
+## References
+
+Reference: Dong E, Du H, Gardner L. An interactive web-based dashboard to track COVID-19 in real time. Lancet Infect Dis; published online Feb 19. https://doi.org/10.1016/S1473-3099(20)30120-1.  
+
+2019 Novel Coronavirus (2019-NCoV) Situation Summary.” Centers for Disease Control and Prevention, Centers for Disease Control and Prevention, 11 Mar. 2020, www.cdc.gov/coronavirus/2019-ncov/summary.html.
+
+## Thank You for Watching 
+
+- Thank you to Profesor Ledford and Rebecca for an amazing quarter <3
+<center>
+![picture of coronavirus](data/spongebob.jpeg)
+<center>
+
+
+
+
+
+
+
+
+
+
