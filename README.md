@@ -13,7 +13,7 @@ This is the repository for the 2019 Novel Coronavirus analysis using data provid
 
 ### Core Technical Concepts/Inspiration
 
-- This was inspired by the many alredy created dashboards and infographics present for coronavirus
+- This was inspired by the many already created dashboards and infographics present for coronavirus
 - Providing information about the nature of the virus and its prevalence in our communities from a social standpoint will allow us to better understand its repercussions and arrange preparations.
 
 ### References
